@@ -8,12 +8,26 @@ import { TopStatusBar } from './components/TopStatusBar';
 import { checkQuizAnswer, getMissionByIndex } from './domain/quiz';
 import { getKoreanTimeParts, normalizeMinutes } from './domain/time';
 import {
+  type LearningProgress,
+  awardMission,
   getMissionNumber,
   getMissionStops,
+  isExplorationComplete,
   isRewardUnlocked,
+  moveMissionCursor,
+  readStoredProgress,
+  restartExploration,
+  writeStoredProgress,
 } from './game/progress';
 
 const INITIAL_TIME = 3 * 60;
+
+type SessionState = {
+  progress: LearningProgress;
+  missionIndex: number;
+  awardedMissionIndexes: number[];
+  journeyStatus: 'playing' | 'complete' | 'ended';
+};
 
 function getCurrentTimeFeedback(totalMinutes: number): string {
   const korean = getKoreanTimeParts(totalMinutes);
@@ -22,21 +36,35 @@ function getCurrentTimeFeedback(totalMinutes: number): string {
 
 export default function App() {
   const [totalMinutes, setTotalMinutes] = useState(INITIAL_TIME);
-  const [missionIndex, setMissionIndex] = useState(0);
+  const [session, setSession] = useState<SessionState>(() => {
+    const progress = readStoredProgress();
+
+    return {
+      progress,
+      missionIndex: progress.nextMissionIndex,
+      awardedMissionIndexes: [],
+      journeyStatus: isExplorationComplete(progress.completedStops) ? 'complete' : 'playing',
+    };
+  });
   const [feedback, setFeedback] = useState(getCurrentTimeFeedback(INITIAL_TIME));
   const [showConfetti, setShowConfetti] = useState(false);
-  const [completedInSession, setCompletedInSession] = useState(0);
-  const [completedMissionIds, setCompletedMissionIds] = useState<string[]>([]);
   const [rewardOpened, setRewardOpened] = useState(false);
 
-  const mission = getMissionByIndex(missionIndex);
-  const missionNumber = getMissionNumber(missionIndex);
-  const rewardUnlocked = isRewardUnlocked(completedInSession);
+  const currentMissionCompleted = session.awardedMissionIndexes.includes(session.missionIndex);
+  const mission = getMissionByIndex(session.missionIndex);
+  const missionNumber = getMissionNumber(session.progress.completedStops, currentMissionCompleted);
+  const rewardUnlocked = isRewardUnlocked(currentMissionCompleted);
+  const journeyComplete = session.journeyStatus === 'complete';
+  const journeyEnded = session.journeyStatus === 'ended';
 
   useEffect(() => {
     setFeedback(getCurrentTimeFeedback(totalMinutes));
     setShowConfetti(false);
   }, [totalMinutes]);
+
+  useEffect(() => {
+    writeStoredProgress(session.progress);
+  }, [session.progress]);
 
   function handleTimeChange(nextMinutes: number) {
     setTotalMinutes(normalizeMinutes(nextMinutes));
@@ -47,10 +75,22 @@ export default function App() {
 
     if (result.correct) {
       setFeedback('정답입니다! 시침과 분침을 정확히 맞췄어요.');
-      if (!completedMissionIds.includes(mission.id)) {
-        setCompletedMissionIds((ids) => [...ids, mission.id]);
-        setCompletedInSession((count) => count + 1);
-      }
+      setSession((current) => {
+        if (current.awardedMissionIndexes.includes(current.missionIndex)) {
+          return current;
+        }
+
+        const nextProgress = awardMission(current.progress, current.missionIndex + 1);
+
+        return {
+          ...current,
+          progress: nextProgress,
+          awardedMissionIndexes: [...current.awardedMissionIndexes, current.missionIndex],
+          journeyStatus: isExplorationComplete(nextProgress.completedStops)
+            ? 'complete'
+            : current.journeyStatus,
+        };
+      });
       setShowConfetti(true);
       window.setTimeout(() => setShowConfetti(false), 1200);
       return;
@@ -61,15 +101,59 @@ export default function App() {
   }
 
   function handleNextMission() {
-    setMissionIndex((current) => current + 1);
+    setSession((current) => {
+      if (isExplorationComplete(current.progress.completedStops)) {
+        return {
+          ...current,
+          journeyStatus: 'complete',
+        };
+      }
+
+      const nextMissionIndex = Math.max(
+        current.missionIndex + 1,
+        current.progress.nextMissionIndex,
+      );
+
+      return {
+        ...current,
+        missionIndex: nextMissionIndex,
+        progress: moveMissionCursor(current.progress, nextMissionIndex),
+      };
+    });
     setShowConfetti(false);
     setRewardOpened(false);
     setFeedback('새 문제입니다. 분침을 움직여 시각을 만들어 보세요.');
   }
 
+  function handleRestartExploration() {
+    setSession((current) => {
+      const nextProgress = restartExploration(current.progress);
+
+      return {
+        progress: nextProgress,
+        missionIndex: nextProgress.nextMissionIndex,
+        awardedMissionIndexes: [],
+        journeyStatus: 'playing',
+      };
+    });
+    setShowConfetti(false);
+    setRewardOpened(false);
+    setFeedback('새 탐험을 시작합니다. 분침을 움직여 시각을 만들어 보세요.');
+  }
+
+  function handleExitExploration() {
+    setSession((current) => ({
+      ...current,
+      journeyStatus: 'ended',
+    }));
+    setShowConfetti(false);
+    setRewardOpened(false);
+    setFeedback('오늘의 탐험을 종료했어요. 기록은 저장되어 다음에 이어서 볼 수 있어요.');
+  }
+
   return (
     <main className="game-shell">
-      <TopStatusBar completedInSession={completedInSession} />
+      <TopStatusBar experience={session.progress.experience} stars={session.progress.stars} />
 
       <section className="play-layout" aria-label="시계 조작과 미션">
         <div className="clock-zone">
@@ -90,12 +174,16 @@ export default function App() {
           feedback={feedback}
           onCheck={handleCheckAnswer}
           onNext={handleNextMission}
+          journeyComplete={journeyComplete}
+          journeyEnded={journeyEnded}
+          onRestart={handleRestartExploration}
+          onExit={handleExitExploration}
         />
       </section>
 
       <section className="adventure-footer" aria-label="탐험 진행과 보상">
         <AdventureMap
-          stops={getMissionStops(missionNumber, completedInSession)}
+          stops={getMissionStops(session.progress.completedStops)}
         />
         <RewardChest
           unlocked={rewardUnlocked}

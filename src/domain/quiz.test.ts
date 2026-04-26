@@ -8,13 +8,17 @@ import {
 
 describe('quiz missions', () => {
   it('includes missions that cover minute, half-hour, hour, and before-the-hour reading', () => {
-    expect(QUIZ_MISSIONS.map((mission) => mission.label)).toEqual([
+    expect(QUIZ_MISSIONS.length).toBeGreaterThanOrEqual(20);
+    expect(QUIZ_MISSIONS.map((mission) => mission.label)).toEqual(expect.arrayContaining([
       '4시 15분',
       '3시 반',
       '4시',
       '6시 45분',
       '8시 55분',
-    ]);
+      '12시',
+      '10시 40분',
+      '12시 55분',
+    ]));
   });
 
   it('returns missions by cycling through the list', () => {

@@ -1,11 +1,14 @@
 import { getLevelNumber, getLevelProgress, getStarScore } from '../game/progress';
 
 type TopStatusBarProps = {
-  completedInSession: number;
+  experience: number;
+  stars: number;
 };
 
-export function TopStatusBar({ completedInSession }: TopStatusBarProps) {
-  const progress = getLevelProgress(completedInSession);
+export function TopStatusBar({ experience, stars }: TopStatusBarProps) {
+  const level = getLevelNumber(experience);
+  const progress = getLevelProgress(experience);
+  const starScore = getStarScore(stars);
   const percent = Math.round((progress.current / progress.max) * 100);
 
   return (
@@ -25,18 +28,18 @@ export function TopStatusBar({ completedInSession }: TopStatusBarProps) {
       </div>
 
       <div className="status-cluster" aria-label="학습 진행 상태">
-        <section className="level-card" aria-label={`레벨 ${getLevelNumber()}, 경험치 ${progress.current} / ${progress.max}`}>
+        <section className="level-card" aria-label={`레벨 ${level}, 경험치 ${progress.current} / ${progress.max}`}>
           <span className="shield-badge" aria-hidden="true">✦</span>
-          <strong>Lv. {getLevelNumber()}</strong>
+          <strong>Lv. {level}</strong>
           <span className="level-meter" aria-hidden="true">
             <span style={{ width: `${percent}%` }} />
           </span>
           <span className="meter-text">{progress.current} / {progress.max}</span>
         </section>
 
-        <section className="star-card" aria-label={`별 점수 ${getStarScore(completedInSession)}점`}>
+        <section className="star-card" aria-label={`별 점수 ${starScore}점`}>
           <span className="star-icon" aria-hidden="true">★</span>
-          <strong>{getStarScore(completedInSession)}</strong>
+          <strong>{starScore}</strong>
         </section>
       </div>
     </header>

@@ -215,6 +215,9 @@ button {
   touch-action: none;
   cursor: grab;
   outline: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
   filter: drop-shadow(0 18px 18px rgba(88, 71, 42, 0.12));
 }
 
@@ -247,6 +250,9 @@ button {
 }
 
 .clock-number {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
   fill: #28282b;
   font-size: 27px;
   font-weight: 950;
@@ -422,6 +428,8 @@ button {
   justify-content: center;
   gap: 18px;
   min-height: 116px;
+  margin: 18px 0 24px;
+  padding-bottom: 8px;
   color: #2c2927;
   font-size: 2.25rem;
   font-weight: 950;
@@ -643,22 +651,14 @@ button {
 .reward-chest {
   position: relative;
   display: grid;
+  align-content: center;
   justify-items: center;
   gap: 7px;
   min-height: 110px;
 }
 
 .reward-chest img {
-  position: absolute;
-  top: -8px;
-  right: 12px;
-  width: 96px;
-  height: 72px;
-  object-fit: cover;
-  object-position: 0% 0%;
-  border-radius: 8px;
-  opacity: 0.96;
-  pointer-events: none;
+  display: none;
 }
 
 .reward-chest button {
@@ -669,7 +669,7 @@ button {
   justify-content: center;
   width: 202px;
   min-height: 74px;
-  margin-top: 8px;
+  margin-top: 0;
   border: 2px solid #c7beb1;
   border-radius: 8px;
   color: #2c2927;
@@ -915,6 +915,8 @@ button {
   .answer-line {
     gap: 12px;
     min-height: 88px;
+    margin: 14px 0 18px;
+    padding-bottom: 6px;
     font-size: 1.85rem;
   }
 

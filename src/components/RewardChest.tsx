@@ -5,9 +5,11 @@ type RewardChestProps = {
 };
 
 export function RewardChest({ unlocked, opened, onOpen }: RewardChestProps) {
+  const rewardAssetUrl = `${import.meta.env.BASE_URL}assets/time-adventure-reward.png`;
+
   return (
     <section className={`reward-chest ${unlocked ? 'unlocked' : 'locked'}`} aria-label="보상함">
-      <img src="/assets/time-adventure-reward.png" alt="" aria-hidden="true" />
+      <img src={rewardAssetUrl} alt="" aria-hidden="true" />
       <button type="button" onClick={onOpen} disabled={!unlocked}>
         <span aria-hidden="true">🏆</span>
         보상함

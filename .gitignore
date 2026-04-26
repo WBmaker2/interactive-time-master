@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.playwright-mcp/
+*.png
+!public/assets/*.png
+*.tsbuildinfo
+vite.config.d.ts
+vite.config.js

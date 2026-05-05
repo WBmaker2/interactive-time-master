@@ -4,6 +4,7 @@ import {
   checkQuizAnswer,
   getMissionByIndex,
   getMissionPrompt,
+  getMissionsByDifficulty,
 } from './quiz';
 
 describe('quiz missions', () => {
@@ -26,6 +27,13 @@ describe('quiz missions', () => {
     expect(getMissionByIndex(QUIZ_MISSIONS.length).label).toBe('4시 15분');
   });
 
+  it('groups missions by clock-reading difficulty', () => {
+    expect(getMissionsByDifficulty('basic').some((mission) => mission.label === '4시')).toBe(true);
+    expect(getMissionsByDifficulty('half').some((mission) => mission.label === '3시 반')).toBe(true);
+    expect(getMissionsByDifficulty('minute').some((mission) => mission.label === '4시 15분')).toBe(true);
+    expect(getMissionsByDifficulty('before').some((mission) => mission.label === '8시 55분')).toBe(true);
+  });
+
   it('creates a Korean classroom prompt with the correct object particle', () => {
     expect(getMissionPrompt(getMissionByIndex(0))).toBe('4시 15분을 만들어보세요!');
     expect(getMissionPrompt(getMissionByIndex(2))).toBe('4시를 만들어보세요!');
@@ -43,7 +51,12 @@ describe('quiz missions', () => {
   });
 
   it('uses circular distance on a 12-hour clock', () => {
-    expect(checkQuizAnswer(0, { id: 'midnight', label: '12시', targetMinutes: 720 })).toEqual({
+    expect(checkQuizAnswer(0, {
+      id: 'midnight',
+      label: '12시',
+      targetMinutes: 720,
+      difficulty: 'basic',
+    })).toEqual({
       correct: true,
       differenceMinutes: 0,
     });

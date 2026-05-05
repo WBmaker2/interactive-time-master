@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   PROGRESS_STORAGE_KEY,
   awardMission,
+  getProgressSummary,
   isExplorationComplete,
   getLevelNumber,
   getLevelProgress,
@@ -9,6 +10,7 @@ import {
   getMissionNumber,
   getMissionStops,
   restartExploration,
+  resetAllProgress,
   getStarScore,
   isRewardUnlocked,
   moveMissionCursor,
@@ -127,5 +129,28 @@ describe('game progress helpers', () => {
       stars: 50,
       nextMissionIndex: 10,
     });
+  });
+
+  it('summarizes saved progress for classroom display', () => {
+    const progress = {
+      completedStops: 4,
+      experience: 140,
+      stars: 35,
+      nextMissionIndex: 9,
+    };
+
+    expect(getProgressSummary(progress)).toEqual({
+      level: 2,
+      levelExperience: 40,
+      levelExperienceMax: 100,
+      stars: 35,
+      completedStops: 4,
+      totalExplorationsCompleted: 0,
+      nextMissionIndex: 9,
+    });
+  });
+
+  it('resets all saved progress to a brand-new learner state', () => {
+    expect(resetAllProgress()).toEqual(getInitialProgress());
   });
 });

@@ -584,7 +584,7 @@ button {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 232px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px) 232px;
   gap: 24px;
   align-items: center;
   min-height: 144px;
@@ -696,6 +696,67 @@ button {
 .stop-number {
   color: #4f463e;
   font-weight: 850;
+}
+
+.learning-record {
+  display: grid;
+  gap: 12px;
+  min-height: 110px;
+  padding: 14px 16px;
+  border: 2px solid #ddd3c3;
+  border-radius: 8px;
+  background: rgba(255, 253, 248, 0.94);
+  box-shadow: 0 4px 0 rgba(70, 54, 30, 0.05);
+}
+
+.learning-record-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.learning-record-copy strong {
+  color: #2f843a;
+  font-size: 1.15rem;
+  font-weight: 950;
+}
+
+.learning-record-copy p,
+.learning-record-copy span {
+  margin: 0;
+  color: #4b433b;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.learning-record-copy span {
+  color: #756b60;
+  font-size: 0.86rem;
+}
+
+.learning-record-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.learning-record-actions button {
+  min-height: 42px;
+  border: 2px solid #d6ccbc;
+  border-radius: 8px;
+  color: #2c2927;
+  background: #fffdf8;
+  font-size: 0.9rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.learning-record-actions button:hover {
+  transform: translateY(-1px);
+}
+
+.learning-record-actions button:focus-visible {
+  outline: 4px solid #f7c948;
+  outline-offset: 3px;
 }
 
 .reward-chest {
@@ -1052,6 +1113,14 @@ button {
 
   .mission-stop::before {
     top: 22px;
+  }
+
+  .learning-record {
+    min-height: 0;
+  }
+
+  .learning-record-actions button {
+    min-height: 48px;
   }
 
   .reward-chest {

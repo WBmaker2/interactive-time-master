@@ -17,6 +17,7 @@ describe('Interactive Time Master app', () => {
     expect(screen.getByText('Lv. 1')).toBeInTheDocument();
     expect(screen.getByLabelText('레벨 1, 경험치 0 / 100')).toBeInTheDocument();
     expect(screen.getByRole('region', { name: '보상함' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: '학습 기록' })).toHaveTextContent('탐험 0 / 10');
     expect(screen.getByText('탐험 지도')).toBeInTheDocument();
     expect(screen.getByLabelText('별 점수 0점')).toBeInTheDocument();
     expect(screen.getByLabelText('1번 미션 current')).toBeInTheDocument();
@@ -143,5 +144,47 @@ describe('Interactive Time Master app', () => {
     await waitFor(() => {
       expect(window.localStorage.getItem(PROGRESS_STORAGE_KEY)).toContain('"completedStops":0');
     });
+  });
+
+  it('shows a learning record and can restart only the map', async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify({
+      completedStops: 6,
+      experience: 120,
+      stars: 30,
+      nextMissionIndex: 6,
+    }));
+
+    render(<App />);
+
+    expect(screen.getByRole('region', { name: '학습 기록' })).toHaveTextContent('탐험 6 / 10');
+    expect(screen.getByRole('region', { name: '학습 기록' })).toHaveTextContent('별 30개');
+
+    await user.click(screen.getByRole('button', { name: '지도 다시 시작' }));
+
+    expect(screen.getByLabelText('별 점수 30점')).toBeInTheDocument();
+    expect(screen.getByLabelText('레벨 2, 경험치 20 / 100')).toBeInTheDocument();
+    expect(screen.getByLabelText('1번 미션 current')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('탐험 지도만 1번부터 다시 시작해요');
+  });
+
+  it('can reset all saved learning progress', async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify({
+      completedStops: 6,
+      experience: 120,
+      stars: 30,
+      nextMissionIndex: 6,
+    }));
+
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: '전체 초기화' }));
+
+    expect(screen.getByLabelText('레벨 1, 경험치 0 / 100')).toBeInTheDocument();
+    expect(screen.getByLabelText('별 점수 0점')).toBeInTheDocument();
+    expect(screen.getByLabelText('1번 미션 current')).toBeInTheDocument();
+    expect(screen.getByText('4시 15분을 만들어보세요!')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('학습 기록을 처음 상태로 되돌렸어요');
   });
 });

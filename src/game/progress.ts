@@ -10,6 +10,16 @@ export type LearningProgress = {
   nextMissionIndex: number;
 };
 
+export type ProgressSummary = {
+  level: number;
+  levelExperience: number;
+  levelExperienceMax: number;
+  stars: number;
+  completedStops: number;
+  totalExplorationsCompleted: number;
+  nextMissionIndex: number;
+};
+
 export const PROGRESS_STORAGE_KEY = 'interactive-time-master.progress.v1';
 
 const INITIAL_PROGRESS: LearningProgress = {
@@ -124,6 +134,10 @@ export function restartExploration(progress: LearningProgress): LearningProgress
   };
 }
 
+export function resetAllProgress(): LearningProgress {
+  return getInitialProgress();
+}
+
 export function getLevelNumber(experience: number): number {
   return Math.floor(toSafeCount(experience) / EXPERIENCE_PER_LEVEL) + 1;
 }
@@ -171,4 +185,21 @@ export function isRewardUnlocked(currentMissionCompleted: boolean): boolean {
 
 export function isExplorationComplete(completedStops: number): boolean {
   return toSafeCount(completedStops) >= MISSION_STOP_COUNT;
+}
+
+export function getProgressSummary(progress: LearningProgress): ProgressSummary {
+  const safeProgress = sanitizeProgress(progress);
+  const levelProgress = getLevelProgress(safeProgress.experience);
+
+  return {
+    level: getLevelNumber(safeProgress.experience),
+    levelExperience: levelProgress.current,
+    levelExperienceMax: levelProgress.max,
+    stars: safeProgress.stars,
+    completedStops: safeProgress.completedStops,
+    totalExplorationsCompleted: Math.floor(
+      safeProgress.experience / (MISSION_STOP_COUNT * EXPERIENCE_PER_MISSION),
+    ),
+    nextMissionIndex: safeProgress.nextMissionIndex,
+  };
 }

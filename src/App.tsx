@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AdventureMap } from './components/AdventureMap';
 import { AnalogClock } from './components/AnalogClock';
 import { ConfettiBurst } from './components/ConfettiBurst';
+import { LearningRecord } from './components/LearningRecord';
 import { MissionCard } from './components/MissionCard';
 import { RewardChest } from './components/RewardChest';
 import { TopStatusBar } from './components/TopStatusBar';
@@ -12,11 +13,13 @@ import {
   awardMission,
   getMissionNumber,
   getMissionStops,
+  getProgressSummary,
   isExplorationComplete,
   isRewardUnlocked,
   moveMissionCursor,
   readStoredProgress,
   restartExploration,
+  resetAllProgress,
   writeStoredProgress,
 } from './game/progress';
 
@@ -56,6 +59,7 @@ export default function App() {
   const rewardUnlocked = isRewardUnlocked(currentMissionCompleted);
   const journeyComplete = session.journeyStatus === 'complete';
   const journeyEnded = session.journeyStatus === 'ended';
+  const progressSummary = getProgressSummary(session.progress);
 
   useEffect(() => {
     setFeedback(getCurrentTimeFeedback(totalMinutes));
@@ -141,6 +145,37 @@ export default function App() {
     setFeedback('새 탐험을 시작합니다. 분침을 움직여 시각을 만들어 보세요.');
   }
 
+  function handleRestartMapOnly() {
+    setSession((current) => {
+      const nextProgress = restartExploration(current.progress);
+
+      return {
+        progress: nextProgress,
+        missionIndex: nextProgress.nextMissionIndex,
+        awardedMissionIndexes: [],
+        journeyStatus: 'playing',
+      };
+    });
+    setShowConfetti(false);
+    setRewardOpened(false);
+    setFeedback('탐험 지도만 1번부터 다시 시작해요. 별과 경험치는 그대로 남아 있어요.');
+  }
+
+  function handleResetAllProgress() {
+    const nextProgress = resetAllProgress();
+
+    setSession({
+      progress: nextProgress,
+      missionIndex: nextProgress.nextMissionIndex,
+      awardedMissionIndexes: [],
+      journeyStatus: 'playing',
+    });
+    setTotalMinutes(INITIAL_TIME);
+    setShowConfetti(false);
+    setRewardOpened(false);
+    setFeedback('학습 기록을 처음 상태로 되돌렸어요.');
+  }
+
   function handleExitExploration() {
     setSession((current) => ({
       ...current,
@@ -184,6 +219,11 @@ export default function App() {
       <section className="adventure-footer" aria-label="탐험 진행과 보상">
         <AdventureMap
           stops={getMissionStops(session.progress.completedStops)}
+        />
+        <LearningRecord
+          summary={progressSummary}
+          onRestartMap={handleRestartMapOnly}
+          onResetAll={handleResetAllProgress}
         />
         <RewardChest
           unlocked={rewardUnlocked}
